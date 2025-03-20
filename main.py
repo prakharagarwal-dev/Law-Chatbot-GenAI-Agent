@@ -1,19 +1,26 @@
 import os
+import time
 
 import fitz
 import groq
 from pinecone import Pinecone, ServerlessSpec
-from twilio.rest import Client
+from transformers import pipeline
 from tqdm import tqdm
 from sentence_transformers import SentenceTransformer
 
 import re
 import langdetect
 
+from flask import Flask, request, Response
+from twilio.twiml.voice_response import VoiceResponse, Gather
+
+app = Flask(__name__)
+
+
 os.environ["TOKENIZERS_PARALLELISM"] = "true"  # Required to avoid tokenization warnings
 
 # Pinecone Initialization
-pc = Pinecone(api_key="pcsk_25hjbe_LfS2dWQeKo9FfzCPuhviPtdMD76trCXwN9w1DdQcfsvLs2eSd4CjTKjM7wMge1h")
+pc = Pinecone(api_key="PINECONE_API_KEY")
 
 # Check if index already exists (it shouldn't if this is first time running the demo)
 if not pc.has_index(name="groq"):
@@ -28,8 +35,21 @@ if not pc.has_index(name="groq"):
             )
     )
 
+if not pc.has_index(name="memory"):
+    # If does not exist, create index
+    pc.create_index(
+        name="memory",  # Replace with your preferred index name
+        dimension=384,  # Use 1536 for OpenAI embeddings
+        metric="cosine",  # Can also be "dotproduct" or "euclidean"
+        spec = ServerlessSpec(
+                cloud='aws',
+                region='us-east-1'
+            )
+    )
+
 # Initialize index client
 index = pc.Index(name="groq")
+mem_index = pc.Index(name="memory")
 
 # ✅ Load Hugging Face Embedding Model (Use a lightweight model for efficiency)
 embedding_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")  # 384-dimension
@@ -43,7 +63,7 @@ def retrieve_relevant_documents(query):
     result = index.query(vector=query_embedding, top_k=3, include_metadata=True)  # Get top 3 most relevant docs
     return result['matches']
 
-client = groq.Groq(api_key="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")
+client = groq.Groq(api_key="GROQ_API_KEY")
 
 def query_groq_model(user_query, context):
     messages = [
@@ -55,7 +75,7 @@ def query_groq_model(user_query, context):
         model="llama-3.3-70b-versatile",
         messages=messages,
         temperature=0.7,
-        max_tokens=150
+        max_tokens=500
     )
 
     answer = response.choices[0].message.content
@@ -63,25 +83,30 @@ def query_groq_model(user_query, context):
 
 
 def get_answer(query):
-    relevant_docs = retrieve_relevant_documents(query)
-    context = "\n".join([doc['metadata']['text'] for doc in relevant_docs])
-    query = f"""Instructions:
-- Be helpful and answer questions concisely. If you don't know the answer, say 'I don't know'
-- Utilize the context provided for accurate and specific information. 
-- Answer this query now: {query}"""
-    response = query_groq_model(query, context)
+    past_memory, retrieved_docs = retrieve_context(query)
+
+    system_context = f"""
+    You are an AI assistant specializing in Indian wildlife and environmental laws, particularly in human-wildlife conflict resolution. Your goal is to provide accurate legal guidance based on the given context.
+
+    ## Instructions:
+    - **Be concise** and provide **direct, legally accurate answers**.
+    - **If the context does not contain enough information, say 'I don't know'.** Do not make up answers.
+    - **Use relevant laws** and references from the provided documents to support your response.
+    - **Maintain continuity**: If the user follows up, consider past conversations to ensure a coherent response.
+    - **Output must be clear, structured, and easy to understand**.
+
+    ## Context from past conversations:
+    {past_memory}
+
+    ## Relevant Legal Documents:
+    {retrieved_docs}
+    """
+
+    response = query_groq_model(query, system_context)  # Generate response from LLM
+
+    store_memory_interaction(query, response)  # Store user query + response in memory
+
     return response
-
-
-def send_whatsapp_message(to, message):
-    client = Client("your-twilio-sid", "your-twilio-auth-token")
-    message = client.messages.create(
-        body=message,
-        from_="whatsapp:+14155238886",
-        to=f"whatsapp:{to}"
-    )
-    return message.sid
-
 
 def extract_text_from_pdf(pdf_path):
     doc = fitz.open(pdf_path)
@@ -148,7 +173,176 @@ def index_pdfs_to_pinecone(pdf_folder_path):
         metadata = [{'text': chunk} for chunk in text_chunks]
         index.upsert(vectors=zip(ids, embeddings, metadata))
 
+# Load Hugging Face Summarization Model
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+
+def summarize_response(response):
+    """Summarizes long chatbot responses to store in memory efficiently."""
+    if len(response.split()) > 50:  # Only summarize if response is long
+        summary = summarizer(response, max_length=100, min_length=30, do_sample=False)
+        return summary[0]["summary_text"]
+    return response  # Return as is if already short
+
+def store_memory_interaction(query, response):
+    """Stores user query and summarized chatbot response in Pinecone memory."""
+    summarized_response = summarize_response(response)
+    memory_entry = {"query": query, "response": summarized_response}
+
+    # Save to Pinecone (or your memory store)
+    index.upsert(vectors=[(get_embeddings([query])[0], memory_entry)])
+
+# def store_memory_interaction(user_query, bot_response):
+#     """
+#     Store user query + bot response in Pinecone memory index.
+#     """
+#     embedding = embedding_model.encode(user_query).tolist()
+#     mem_index.upsert(
+#         vectors=[(f"chat_{user_query}", embedding, {"query": user_query, "response": bot_response})]
+#     )
+
+def retrieve_context(user_query, top_k=3):
+    """
+    Retrieve past memory + relevant RAG documents.
+    """
+    embedding = embedding_model.encode(user_query).tolist()
+
+    # Retrieve past conversations
+    memory_results = mem_index.query(vector=embedding, top_k=top_k, include_metadata=True)
+    past_contexts = [
+        f"User: {match['metadata']['query']}\nAI: {match['metadata']['response']}"
+        for match in memory_results["matches"]
+    ]
+
+    # Retrieve RAG documents
+    doc_results = index.query(vector=embedding, top_k=top_k, include_metadata=True)
+    doc_contexts = [match["metadata"]["text"] for match in doc_results["matches"]]
+
+    return "\n".join(past_contexts), "\n".join(doc_contexts)
+
 pdf_folder_path = "./data"
+
+from twilio.rest import Client
+
+# Twilio credentials
+# account_sid = "TWILIO_ACCOUNT_SID"
+# auth_token = "TWILIO_AUTH_TOKEN"
+#
+# # Initialize Twilio client
+# twilio_client = Client(account_sid, auth_token)
+#
+# # Make a call
+# call = twilio_client.calls.create(
+#     to="PHONE_NUMBER",  # Replace with the recipient's phone number
+#     from_="+17069481798",  # Replace with your Twilio phone number
+#     url="https://7c17-2001-420-5448-1302-95dc-8e19-3261-d029.ngrok-free.app/ivr"
+# )
+#
+# print(f"Call SID: {call.sid}")
+
+def split_text(text, max_length=1000):
+    """Splits text into smaller chunks that fit within Twilio's limits."""
+    return [text[i:i + max_length] for i in range(0, len(text), max_length)]
+
+
+def convert_markdown_to_whatsapp(text):
+    """Converts standard Markdown to WhatsApp-supported formatting."""
+
+    # Convert bold (**text**) → *text*
+    text = re.sub(r'\*\*(.*?)\*\*', r'*\1*', text)
+
+    # Convert italic (*text* or _text_) → _text_
+    text = re.sub(r'\*(.*?)\*', r'_\1_', text)
+
+    # Convert headings (# Heading) → *Heading*
+    text = re.sub(r'#+\s*(.*)', r'*\1*', text)
+
+    # Convert unordered lists (- item) → • item
+    text = re.sub(r'^\s*[-*]\s+', '• ', text, flags=re.MULTILINE)
+
+    # Remove inline code blocks (```code```) → (not supported in WhatsApp)
+    text = re.sub(r'```(.*?)```', r'\1', text, flags=re.DOTALL)
+
+    # Remove single-line inline code (`code`) → (not supported in WhatsApp)
+    text = re.sub(r'`([^`]+)`', r'\1', text)
+
+    return text
+
+from twilio.twiml.messaging_response import MessagingResponse
+
+@app.route("/whatsapp", methods=["POST"])
+def whatsapp_webhook():
+    incoming_msg = request.values.get("Body", "").strip()
+
+    # Send message to chatbot and get a response
+    chatbot_response = get_answer(incoming_msg)
+    print("Chatbot response: ", chatbot_response)
+
+    # Convert Markdown to WhatsApp format
+    formatted_response = convert_markdown_to_whatsapp(chatbot_response)
+
+    # Split long responses
+    response_chunks = split_text(formatted_response)
+    # Create Twilio response
+    resp = MessagingResponse()
+    for chunk in response_chunks:
+        resp.message(chunk)
+        time.sleep(1)
+
+    return str(resp)
+
+
+@app.route("/ivr", methods=["POST"])
+def ivr():
+    """Handles incoming Twilio calls and processes user input."""
+    response = VoiceResponse()
+
+    # Step 1: Ask user a question
+    gather = Gather(input="speech", action="/process_query", timeout=5)
+    gather.say("Welcome to the Wildlife Legal Assistant. Please ask your question.")
+    response.append(gather)
+
+    return Response(str(response), mimetype="text/xml")
+
+
+@app.route("/process_query", methods=["POST"])
+def process_query():
+    """Processes user input and responds with chatbot output."""
+    response = VoiceResponse()
+
+    # Capture user query
+    user_query = request.form.get("SpeechResult")
+    print("User Query:", user_query)
+
+    if user_query:
+        # Detect if user wants to exit
+        exit_phrases = ["no", "goodbye", "exit", "that's all", "stop", "end", "thank you"]
+        if user_query.lower().strip() in exit_phrases:
+            response.say("Thank you for using the Wildlife Legal Assistant. Goodbye!")
+            response.hangup()
+            return Response(str(response), mimetype="text/xml")
+
+        # Get chatbot response
+        chatbot_response = get_answer(user_query)
+
+        # Split long response into chunks
+        response_chunks = split_text(chatbot_response, max_length=1000)
+
+        # Speak each chunk
+        for chunk in response_chunks:
+            response.say(chunk)
+
+        # Ask if user has another question
+        gather = Gather(input="speech", action="/process_query", timeout=10)
+        gather.say("Do you have another question? Please ask now.")
+        response.append(gather)
+
+    else:
+        response.say("I didn't catch that. Please try again.")
+
+    return Response(str(response), mimetype="text/xml")
+
+if __name__ == "__main__":
+    app.run(port=8000)
 
 # Index PDFs into Pinecone
 # index_pdfs_to_pinecone(pdf_folder_path)
@@ -157,7 +351,18 @@ pdf_folder_path = "./data"
 # print(get_answer("how much is the Payment of compensation in case of loss of human life in Tamil Nadu?"))
 
 # print(retrieve_relevant_documents("how much is the Payment of compensation in case of loss of human life in Andhra Pradesh?"))
-print(get_answer("how much is the Payment of compensation in case of loss of human life in Andhra Pradesh?"))
+# print(get_answer("how much is the Payment of compensation in case of loss of human life in Andhra Pradesh?"))
+
+# print(retrieve_relevant_documents("how much is the Payment of compensation in case of loss of human life in Andhra Pradesh?"))
+# print(get_answer("I am a farmer in kerala, how much compensation can I get for the loss of my crops?"))
+
+# while True:
+#     query = input("Enter your query (or type 'exit' to quit): ")
+#     if query.lower() == 'exit':
+#         break
+#     answer = get_answer(query)
+#     print("Answer:", answer)
+
 
 # print(extract_text_from_pdf("./data/MH.pdf"))
 # print(clean_text(extract_text_from_pdf("./data/MH.pdf")))

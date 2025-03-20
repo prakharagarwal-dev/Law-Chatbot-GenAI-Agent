@@ -1,0 +1,60 @@
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"AutoImportSettings\">\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\n  </component>\n  <component name=\"ChangeListManager\">\n    <list default=\"true\" id=\"319e86db-5601-4e3c-a28b-008e75c6c9cd\" name=\"Changes\" comment=\"fix: token size\">\n      <change afterPath=\"$PROJECT_DIR$/data/KA.pdf\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/data/KL-2.pdf\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/data/KL-3.pdf\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/data/TN-2.pdf\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/main.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/main.py\" afterDir=\"false\" />\n    </list>\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\n  </component>\n  <component name=\"Git.Settings\">\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\n  </component>\n  <component name=\"ProjectColorInfo\"><![CDATA[{\n  \"associatedIndex\": 8\n}]]></component>\n  <component name=\"ProjectId\" id=\"2ua67NXKrApJv0jXlUJ60wYscP5\" />\n  <component name=\"ProjectLevelVcsManager\" settingsEditedManually=\"true\">\n    <ConfirmationsSetting value=\"2\" id=\"Add\" />\n  </component>\n  <component name=\"ProjectViewState\">\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\n    <option name=\"showLibraryContents\" value=\"true\" />\n  </component>\n  <component name=\"PropertiesComponent\"><![CDATA[{\n  \"keyToString\": {\n    \"RunOnceActivity.ShowReadmeOnStart\": \"true\",\n    \"git-widget-placeholder\": \"main\",\n    \"last_opened_file_path\": \"/Users/prakhara/PycharmProjects/pivot/data\"\n  }\n}]]></component>\n  <component name=\"RecentsManager\">\n    <key name=\"CopyFile.RECENT_KEYS\">\n      <recent name=\"$PROJECT_DIR$/data\" />\n    </key>\n    <key name=\"MoveFile.RECENT_KEYS\">\n      <recent name=\"$PROJECT_DIR$\" />\n      <recent name=\"$PROJECT_DIR$/data\" />\n    </key>\n  </component>\n  <component name=\"SharedIndexes\">\n    <attachedChunks>\n      <set>\n        <option value=\"bundled-python-sdk-6a3326d57233-c546a90a8094-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-242.24807.21\" />\n      </set>\n    </attachedChunks>\n  </component>\n  <component name=\"SpellCheckerSettings\" RuntimeDictionaries=\"0\" Folders=\"0\" CustomDictionaries=\"0\" DefaultDictionary=\"application-level\" UseSingleDictionary=\"true\" transferred=\"true\" />\n  <component name=\"TaskManager\">\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\n      <changelist id=\"319e86db-5601-4e3c-a28b-008e75c6c9cd\" name=\"Changes\" comment=\"\" />\n      <created>1742474169257</created>\n      <option name=\"number\" value=\"Default\" />\n      <option name=\"presentableId\" value=\"Default\" />\n      <updated>1742474169257</updated>\n    </task>\n    <task id=\"LOCAL-00001\" summary=\"feat: initial chatbot working\">\n      <option name=\"closed\" value=\"true\" />\n      <created>1742483296364</created>\n      <option name=\"number\" value=\"00001\" />\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1742483296364</updated>\n    </task>\n    <task id=\"LOCAL-00002\" summary=\"feat: IVR and WA works\">\n      <option name=\"closed\" value=\"true\" />\n      <created>1742498447344</created>\n      <option name=\"number\" value=\"00002\" />\n      <option name=\"presentableId\" value=\"LOCAL-00002\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1742498447344</updated>\n    </task>\n    <task id=\"LOCAL-00003\" summary=\"feat: multilingual support in WA\">\n      <option name=\"closed\" value=\"true\" />\n      <created>1742503999488</created>\n      <option name=\"number\" value=\"00003\" />\n      <option name=\"presentableId\" value=\"LOCAL-00003\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1742503999488</updated>\n    </task>\n    <task id=\"LOCAL-00004\" summary=\"fix: token size\">\n      <option name=\"closed\" value=\"true\" />\n      <created>1742504349866</created>\n      <option name=\"number\" value=\"00004\" />\n      <option name=\"presentableId\" value=\"LOCAL-00004\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1742504349866</updated>\n    </task>\n    <option name=\"localTasksCounter\" value=\"5\" />\n    <servers />\n  </component>\n  <component name=\"VcsManagerConfiguration\">\n    <MESSAGE value=\"feat: initial chatbot working\" />\n    <MESSAGE value=\"feat: IVR and WA works\" />\n    <MESSAGE value=\"feat: multilingual support in WA\" />\n    <MESSAGE value=\"fix: token size\" />\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"fix: token size\" />\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision 3a7f950707e550ce318c1391eb2a6e95a709d321)
++++ b/.idea/workspace.xml	(date 1742554404267)
+@@ -4,13 +4,8 @@
+     <option name="autoReloadType" value="SELECTIVE" />
+   </component>
+   <component name="ChangeListManager">
+-    <list default="true" id="319e86db-5601-4e3c-a28b-008e75c6c9cd" name="Changes" comment="fix: token size">
+-      <change afterPath="$PROJECT_DIR$/data/KA.pdf" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/data/KL-2.pdf" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/data/KL-3.pdf" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/data/TN-2.pdf" afterDir="false" />
++    <list default="true" id="319e86db-5601-4e3c-a28b-008e75c6c9cd" name="Changes" comment="feat: changes">
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -95,7 +90,23 @@
+       <option name="project" value="LOCAL" />
+       <updated>1742504349866</updated>
+     </task>
+-    <option name="localTasksCounter" value="5" />
++    <task id="LOCAL-00005" summary="feat: changes">
++      <option name="closed" value="true" />
++      <created>1742531372908</created>
++      <option name="number" value="00005" />
++      <option name="presentableId" value="LOCAL-00005" />
++      <option name="project" value="LOCAL" />
++      <updated>1742531372908</updated>
++    </task>
++    <task id="LOCAL-00006" summary="feat: changes">
++      <option name="closed" value="true" />
++      <created>1742554402968</created>
++      <option name="number" value="00006" />
++      <option name="presentableId" value="LOCAL-00006" />
++      <option name="project" value="LOCAL" />
++      <updated>1742554402968</updated>
++    </task>
++    <option name="localTasksCounter" value="7" />
+     <servers />
+   </component>
+   <component name="VcsManagerConfiguration">
+@@ -103,6 +114,7 @@
+     <MESSAGE value="feat: IVR and WA works" />
+     <MESSAGE value="feat: multilingual support in WA" />
+     <MESSAGE value="fix: token size" />
+-    <option name="LAST_COMMIT_MESSAGE" value="fix: token size" />
++    <MESSAGE value="feat: changes" />
++    <option name="LAST_COMMIT_MESSAGE" value="feat: changes" />
+   </component>
+ </project>
+\ No newline at end of file
