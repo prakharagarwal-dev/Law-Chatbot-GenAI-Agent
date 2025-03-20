@@ -1,5 +1,6 @@
 import os
 import time
+import uuid
 
 import fitz
 import groq
@@ -162,7 +163,7 @@ def index_pdfs_to_pinecone(pdf_folder_path):
 
         text = extract_text_from_pdf(pdf_path)
         ct = clean_text(text)
-        chunk_size = 7500
+        chunk_size = 5000
         overlap_size = 1000
         text_chunks = chunk_with_overlap(ct, chunk_size, overlap_size)
 
@@ -186,10 +187,18 @@ def summarize_response(response):
 def store_memory_interaction(query, response):
     """Stores user query and summarized chatbot response in Pinecone memory."""
     summarized_response = summarize_response(response)
-    memory_entry = {"query": query, "response": summarized_response}
 
-    # Save to Pinecone (or your memory store)
-    index.upsert(vectors=[(get_embeddings([query])[0], memory_entry)])
+    # Generate unique ID for this memory entry
+    memory_id = str(uuid.uuid4())
+
+    # Get embedding for the query
+    query_embedding = get_embeddings([query])[0]
+
+    # Properly structure metadata
+    metadata = {"query": query, "response": summarized_response}
+
+    # Store in Pinecone
+    mem_index.upsert(vectors=[(memory_id, query_embedding, metadata)])
 
 # def store_memory_interaction(user_query, bot_response):
 #     """
@@ -267,15 +276,44 @@ def convert_markdown_to_whatsapp(text):
 
     return text
 
+from langdetect import detect
+from deep_translator import GoogleTranslator
+
+# Function to detect the language
+def detect_language(text):
+    try:
+        return detect(text)  # Returns language code (e.g., 'hi' for Hindi, 'ta' for Tamil)
+    except:
+        return "en"  # Default to English if detection fails
+
+# Function to translate text
+def translate_text(text, src_lang, target_lang):
+    if src_lang == target_lang:
+        return text  # No translation needed
+    return GoogleTranslator(source=src_lang, target=target_lang).translate(text)
+
 from twilio.twiml.messaging_response import MessagingResponse
 
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp_webhook():
     incoming_msg = request.values.get("Body", "").strip()
 
+    detected_lang = detect_language(incoming_msg)
+    print("Detected Language:", detected_lang)
+
+    # If not English, translate to English
+    if detected_lang != "en":
+        translated_query = translate_text(incoming_msg, detected_lang, "en")
+    else:
+        translated_query = incoming_msg
+
     # Send message to chatbot and get a response
-    chatbot_response = get_answer(incoming_msg)
+    chatbot_response = get_answer(translated_query)
     print("Chatbot response: ", chatbot_response)
+
+    # Translate back to the user's language
+    if detected_lang != "en":
+        chatbot_response = translate_text(chatbot_response, "en", detected_lang)
 
     # Convert Markdown to WhatsApp format
     formatted_response = convert_markdown_to_whatsapp(chatbot_response)
