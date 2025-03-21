@@ -36,6 +36,18 @@ if not pc.has_index(name="groq"):
             )
     )
 
+if not pc.has_index(name="groq-2"):
+    # If does not exist, create index
+    pc.create_index(
+        name="groq-2",  # Replace with your preferred index name
+        dimension=384,  # Use 1536 for OpenAI embeddings
+        metric="cosine",  # Can also be "dotproduct" or "euclidean"
+        spec=ServerlessSpec(
+            cloud='aws',
+            region='us-east-1'
+        )
+    )
+
 if not pc.has_index(name="memory"):
     # If does not exist, create index
     pc.create_index(
@@ -49,7 +61,7 @@ if not pc.has_index(name="memory"):
     )
 
 # Initialize index client
-index = pc.Index(name="groq")
+index = pc.Index(name="groq-2")
 mem_index = pc.Index(name="memory")
 
 # ✅ Load Hugging Face Embedding Model (Use a lightweight model for efficiency)
@@ -163,16 +175,25 @@ def index_pdfs_to_pinecone(pdf_folder_path):
 
         text = extract_text_from_pdf(pdf_path)
         ct = clean_text(text)
+        if not ct or len(ct) == 0:
+            print("text: ", text)
         chunk_size = 5000
         overlap_size = 1000
         text_chunks = chunk_with_overlap(ct, chunk_size, overlap_size)
 
         embeddings = get_embeddings(text_chunks)
 
+        # Check if embeddings exist and are valid
+        if not embeddings or len(embeddings) == 0:
+            print(text_chunks)
+            print(f"Skipping {pdf_file} - No valid embeddings found.")
+            continue  # Skip this file if no embeddings are available
+
         ids = [f"{pdf_file}_{i}" for i in range(len(text_chunks))]
 
         metadata = [{'text': chunk} for chunk in text_chunks]
-        index.upsert(vectors=zip(ids, embeddings, metadata))
+
+        index.upsert(vectors=list(zip(ids, embeddings, metadata)))
 
 # Load Hugging Face Summarization Model
 summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
@@ -320,6 +341,7 @@ def whatsapp_webhook():
 
     # Split long responses
     response_chunks = split_text(formatted_response)
+
     # Create Twilio response
     resp = MessagingResponse()
     for chunk in response_chunks:
@@ -379,11 +401,13 @@ def process_query():
 
     return Response(str(response), mimetype="text/xml")
 
+# Index PDFs into Pinecone
+# index_pdfs_to_pinecone(pdf_folder_path)
+
 if __name__ == "__main__":
     app.run(port=8000)
 
-# Index PDFs into Pinecone
-# index_pdfs_to_pinecone(pdf_folder_path)
+
 
 # print(retrieve_relevant_documents("how much is the Payment of compensation in case of loss of human life in Tamil Nadu?"))
 # print(get_answer("how much is the Payment of compensation in case of loss of human life in Tamil Nadu?"))

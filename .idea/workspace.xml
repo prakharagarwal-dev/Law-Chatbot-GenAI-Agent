@@ -4,8 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="319e86db-5601-4e3c-a28b-008e75c6c9cd" name="Changes" comment="feat: initial chatbot working">
-      <change afterPath="$PROJECT_DIR$/data/TL.pdf" afterDir="false" />
+    <list default="true" id="319e86db-5601-4e3c-a28b-008e75c6c9cd" name="Changes" comment="fix: token size">
+      <change afterPath="$PROJECT_DIR$/data/KA.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/KL-2.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/KL-3.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/TN-2.pdf" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -40,6 +43,7 @@
       <recent name="$PROJECT_DIR$/data" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/data" />
     </key>
   </component>
@@ -67,11 +71,38 @@
       <option name="project" value="LOCAL" />
       <updated>1742483296364</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="feat: IVR and WA works">
+      <option name="closed" value="true" />
+      <created>1742498447344</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1742498447344</updated>
+    </task>
+    <task id="LOCAL-00003" summary="feat: multilingual support in WA">
+      <option name="closed" value="true" />
+      <created>1742503999488</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1742503999488</updated>
+    </task>
+    <task id="LOCAL-00004" summary="fix: token size">
+      <option name="closed" value="true" />
+      <created>1742504349866</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1742504349866</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="feat: initial chatbot working" />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: initial chatbot working" />
+    <MESSAGE value="feat: IVR and WA works" />
+    <MESSAGE value="feat: multilingual support in WA" />
+    <MESSAGE value="fix: token size" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix: token size" />
   </component>
 </project>
