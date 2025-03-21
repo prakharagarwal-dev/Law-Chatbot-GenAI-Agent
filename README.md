@@ -38,7 +38,7 @@ This project is an AI-powered assistant specializing in Indian wildlife and envi
 
 1. **Run the Flask server**:
     ```sh
-    python app.py
+    python main.py
     ```
 
 2. **Interact with the assistant**:
